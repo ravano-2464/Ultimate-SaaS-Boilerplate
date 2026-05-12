@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { SelectField } from '@/components/ui/select-field';
 import { ApiError, authApi, subscriptionsApi, tenantsApi } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { TenantRole } from '@/lib/types';
@@ -12,8 +13,25 @@ type TenantOption = {
   role: TenantRole | null;
 };
 
-const planOptions = ['FREE', 'STARTER', 'PRO', 'ENTERPRISE'] as const;
-const statusOptions = ['TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELED'] as const;
+type SubscriptionPlanValue = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
+type SubscriptionStatusValue = 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED';
+const roleSelectOptions: Array<{ value: TenantRole; label: string }> = [
+  { value: 'OWNER', label: 'OWNER - Akses penuh tenant' },
+  { value: 'ADMIN', label: 'ADMIN - Kelola member & subscription' },
+  { value: 'MEMBER', label: 'MEMBER - Akses standar' },
+];
+const planSelectOptions: Array<{ value: SubscriptionPlanValue; label: string }> = [
+  { value: 'FREE', label: 'FREE - Gratis' },
+  { value: 'STARTER', label: 'STARTER - Basic Growth' },
+  { value: 'PRO', label: 'PRO - Advanced Team' },
+  { value: 'ENTERPRISE', label: 'ENTERPRISE - Scale Organization' },
+];
+const statusSelectOptions: Array<{ value: SubscriptionStatusValue; label: string }> = [
+  { value: 'TRIALING', label: 'TRIALING - Masa percobaan' },
+  { value: 'ACTIVE', label: 'ACTIVE - Aktif' },
+  { value: 'PAST_DUE', label: 'PAST_DUE - Pembayaran tertunda' },
+  { value: 'CANCELED', label: 'CANCELED - Dibatalkan' },
+];
 
 function rolePill(role: string): string {
   if (role === 'OWNER') return 'bg-emerald-100 text-emerald-800';
@@ -81,6 +99,10 @@ export default function DashboardPage() {
   }, [selectedTenantId, tenantOptions, setSelectedTenantId]);
 
   const selectedTenant = tenantOptions.find((item) => item.tenantId === selectedTenantId) ?? null;
+  const tenantSelectOptions = tenantOptions.map((option) => ({
+    value: option.tenantId,
+    label: option.role ? `${option.tenantName} • ${option.role}` : `${option.tenantName} • SUPER_ADMIN`,
+  }));
   const selectedMembership = memberships.find((item) => item.tenantId === selectedTenantId);
   const isSuperAdmin = user?.globalRole === 'SUPER_ADMIN';
   const canManageMembers = isSuperAdmin || ['OWNER', 'ADMIN'].includes(selectedMembership?.role ?? '');
@@ -145,8 +167,8 @@ export default function DashboardPage() {
   const updateSubscriptionMutation = useMutation({
     mutationFn: (payload: { tenantId: string; plan: string; status: string; seats: number }) =>
       subscriptionsApi.update(payload.tenantId, {
-        plan: payload.plan as (typeof planOptions)[number],
-        status: payload.status as (typeof statusOptions)[number],
+        plan: payload.plan as SubscriptionPlanValue,
+        status: payload.status as SubscriptionStatusValue,
         seats: payload.seats,
       }),
     onSuccess: () => {
@@ -237,18 +259,12 @@ export default function DashboardPage() {
             <label htmlFor="tenant" className="text-sm font-medium text-slate-700">
               Active tenant
             </label>
-            <select
+            <SelectField
               id="tenant"
               value={selectedTenantId ?? ''}
               onChange={(event) => setSelectedTenantId(event.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            >
-              {tenantOptions.map((option) => (
-                <option key={option.tenantId} value={option.tenantId}>
-                  {option.tenantName}
-                </option>
-              ))}
-            </select>
+              options={tenantSelectOptions}
+            />
             {selectedTenant ? (
               <div className="text-xs text-slate-500">
                 Role in tenant:{' '}
@@ -308,7 +324,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-2">
                         <div className="flex gap-2">
-                          <select
+                          <SelectField
                             value={memberRoleChanges[member.userId] ?? member.role}
                             onChange={(event) =>
                               setMemberRoleChanges((prev) => ({
@@ -316,13 +332,10 @@ export default function DashboardPage() {
                                 [member.userId]: event.target.value as TenantRole,
                               }))
                             }
-                            className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                            options={roleSelectOptions}
+                            size="sm"
                             disabled={!canManageMembers}
-                          >
-                            <option value="MEMBER">MEMBER</option>
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="OWNER">OWNER</option>
-                          </select>
+                          />
                           <button
                             type="button"
                             disabled={!canManageMembers || updateRoleMutation.isPending}
@@ -354,16 +367,12 @@ export default function DashboardPage() {
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm"
                 disabled={!canManageMembers}
               />
-              <select
+              <SelectField
                 value={inviteRole}
                 onChange={(event) => setInviteRole(event.target.value as TenantRole)}
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                options={roleSelectOptions}
                 disabled={!canManageMembers}
-              >
-                <option value="MEMBER">MEMBER</option>
-                <option value="ADMIN">ADMIN</option>
-                <option value="OWNER">OWNER</option>
-              </select>
+              />
               <button
                 type="submit"
                 disabled={!canManageMembers || inviteMemberMutation.isPending}
@@ -386,30 +395,18 @@ export default function DashboardPage() {
             className="mt-4 grid gap-3 md:grid-cols-4"
             onSubmit={handleUpdateSubscription}
           >
-            <select
+            <SelectField
               name="plan"
               defaultValue={subscriptionQuery.data.plan}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              options={planSelectOptions}
               disabled={!canEditSubscription}
-            >
-              {planOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <select
+            />
+            <SelectField
               name="status"
               defaultValue={subscriptionQuery.data.status}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              options={statusSelectOptions}
               disabled={!canEditSubscription}
-            >
-              {statusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            />
             <input
               name="seats"
               type="number"

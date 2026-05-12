@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { PasswordField } from '@/components/ui/password-field';
 import { ApiError, authApi } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -81,13 +82,11 @@ export default function RegisterPage() {
           <label htmlFor="password" className="text-sm font-medium text-slate-700">
             Password
           </label>
-          <input
+          <PasswordField
             id="password"
             name="password"
-            type="password"
             required
             minLength={8}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
           />
         </div>
         <div className="space-y-1">
