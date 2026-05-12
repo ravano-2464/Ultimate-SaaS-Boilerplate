@@ -34,6 +34,14 @@ button {
   font-family: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 code,
 pre {
   font-family: var(--font-plex), monospace;

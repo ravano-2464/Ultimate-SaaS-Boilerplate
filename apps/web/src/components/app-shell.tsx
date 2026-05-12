@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      <header className="border-b border-slate-200/80 bg-slate-50/90 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-slate-50/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-lg font-semibold tracking-tight text-slate-900">
