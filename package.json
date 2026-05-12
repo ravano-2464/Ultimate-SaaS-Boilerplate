@@ -1,0 +1,24 @@
+{
+  "name": "ultimate-saas-boilerplate",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run start:dev --workspace @ultimate/api",
+    "dev:web": "npm run dev --workspace @ultimate/web",
+    "build": "npm run build --workspace @ultimate/api && npm run build --workspace @ultimate/web",
+    "lint": "npm run lint --workspace @ultimate/api && npm run lint --workspace @ultimate/web",
+    "test": "npm run test --workspace @ultimate/api",
+    "db:generate": "dotenv -e .env -- npm run prisma:generate --workspace @ultimate/api",
+    "db:push": "dotenv -e .env -- npm run prisma:push --workspace @ultimate/api",
+    "db:migrate": "dotenv -e .env -- npm run prisma:migrate --workspace @ultimate/api",
+    "db:seed": "dotenv -e .env -- npm run prisma:seed --workspace @ultimate/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^10.0.0"
+  }
+}
